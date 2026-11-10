@@ -1,0 +1,63 @@
+# Remote Files (screen version) — SEPARATE instance, runs alongside the existing
+# files.clevercampus.cloud without touching it. Everything here is renamed with a
+# "-scn" suffix so it never collides with the original "remote-files" project:
+# different project name, container names, network aliases and data volume.
+# It publishes NO ports; Clever Campus's nginx reaches it over the shared network.
+name: remote-files-scn
+
+services:
+  server:
+    build:
+      context: ..
+      args:
+        PUBLIC_URL: ${PUBLIC_URL}
+        COMPANY_NAME: ${COMPANY_NAME}
+    image: remote-files-scn-server:latest
+    container_name: remote-files-scn-server
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - remote_files_scn_data:/data
+    networks:
+      edge:
+        aliases: [remote-files-scn-server]
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # OnlyOffice (in-browser Excel editing) is DISABLED by default on this instance
+  # to keep it light — a second Document Server needs ~2 GB RAM, and the existing
+  # instance already runs one. The app auto-hides the Excel "Edit" button when the
+  # ONLYOFFICE_* vars in .env are blank. To enable it here later: uncomment this
+  # service (its alias is onlyoffice-scn, not onlyoffice), fill the ONLYOFFICE_*
+  # vars in .env, and uncomment the office server block in nginx/remote-files-scn.conf.
+  #
+  # onlyoffice:
+  #   image: onlyoffice/documentserver:8.2.2
+  #   container_name: remote-files-scn-onlyoffice
+  #   restart: unless-stopped
+  #   environment:
+  #     JWT_ENABLED: "true"
+  #     JWT_SECRET: ${ONLYOFFICE_JWT_SECRET}
+  #     JWT_HEADER: Authorization
+  #   volumes:
+  #     - onlyoffice_scn_data:/var/www/onlyoffice/Data
+  #     - onlyoffice_scn_log:/var/log/onlyoffice
+  #   networks:
+  #     edge:
+  #       aliases: [onlyoffice-scn]
+  #   mem_limit: 2g
+  #   logging:
+  #     driver: json-file
+  #     options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  remote_files_scn_data:
+  # onlyoffice_scn_data:
+  # onlyoffice_scn_log:
+
+networks:
+  edge:
+    external: true
+    name: clever-campus_clever_campus_net

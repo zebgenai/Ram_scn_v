@@ -1,0 +1,12 @@
+# Adds the screen-version (scn) server block to the EXISTING Clever Campus nginx
+# WITHOUT editing Clever Campus's own config.
+#
+# /root/school-erp-saas/docker-compose.override.yml probably ALREADY exists (it
+# mounts the original remote-files.conf). In that case do NOT overwrite it —
+# just ADD the second volume line below to the existing nginx service's volumes.
+# A different mount filename (remote-files-scn.conf) means both coexist.
+services:
+  nginx:
+    volumes:
+      # keep the existing line for the original instance, and add this one:
+      - /root/remote-files-scn/deploy/nginx/remote-files-scn.conf:/etc/nginx/conf.d/remote-files-scn.conf:ro
